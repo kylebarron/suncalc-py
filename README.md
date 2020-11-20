@@ -139,7 +139,8 @@ Returns a `dict` where the keys are `solar_noon`, `nadir`, plus any keys passed
 in the `times` argument. If the input values were singletons, the `dict`'s
 values will be of type `datetime.datetime` (or `pd.Timestamp` if you have pandas
 installed, which is a subclass of and therefore compatible with
-`datetime.datetime`). Otherwise they'll be pandas `DateTime` series.
+`datetime.datetime`). Otherwise they'll be pandas `DateTime` series. **The
+returned times will be in UTC.**
 
 ## Benchmark
 
