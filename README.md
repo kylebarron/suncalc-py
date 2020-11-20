@@ -158,7 +158,10 @@ loop. The first is more than **100x faster** than the second.
 
 Likewise, compute `SunCalc.get_times` the same two ways: first using the
 vectorized implementation and the second using `df.apply`. The first is **2800x
-faster** than the second!
+faster** than the second! Much of the difference here is that under the hood the
+non-vectorized approach uses `pd.to_datetime` while the vectorized
+implementation uses `np.astype('datetime64[ns, UTC]') `. `pd.to_datetime` is
+really slow!!
 
 ```py
 %timeit get_times(df['date'], df['lon'], df['lat'])
