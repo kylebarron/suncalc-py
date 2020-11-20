@@ -218,7 +218,7 @@ class SunCalc:
         Jnoon = solar_transit_j(ds, M, L)
 
         result = {
-            'solarNoon': from_julian(Jnoon),
+            'solar_noon': from_julian(Jnoon),
             'nadir': from_julian(Jnoon - 0.5)}
 
         for time in self.times:

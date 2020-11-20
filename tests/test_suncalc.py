@@ -11,23 +11,23 @@ lng = 30.5
 height = 2000
 
 testTimes = {
-    'solarNoon': '2013-03-05T10:10:57Z',
+    'solar_noon': '2013-03-05T10:10:57Z',
     'nadir': '2013-03-04T22:10:57Z',
     'sunrise': '2013-03-05T04:34:56Z',
     'sunset': '2013-03-05T15:46:57Z',
-    'sunriseEnd': '2013-03-05T04:38:19Z',
-    'sunsetStart': '2013-03-05T15:43:34Z',
+    'sunrise_end': '2013-03-05T04:38:19Z',
+    'sunset_start': '2013-03-05T15:43:34Z',
     'dawn': '2013-03-05T04:02:17Z',
     'dusk': '2013-03-05T16:19:36Z',
-    'nauticalDawn': '2013-03-05T03:24:31Z',
-    'nauticalDusk': '2013-03-05T16:57:22Z',
-    'nightEnd': '2013-03-05T02:46:17Z',
+    'nautical_dawn': '2013-03-05T03:24:31Z',
+    'nautical_dusk': '2013-03-05T16:57:22Z',
+    'night_end': '2013-03-05T02:46:17Z',
     'night': '2013-03-05T17:35:36Z',
-    'goldenHourEnd': '2013-03-05T05:19:01Z',
-    'goldenHour': '2013-03-05T15:02:52Z'}
+    'golden_hour_end': '2013-03-05T05:19:01Z',
+    'golden_hour': '2013-03-05T15:02:52Z'}
 
 heightTestTimes = {
-    'solarNoon': '2013-03-05T10:10:57Z',
+    'solar_noon': '2013-03-05T10:10:57Z',
     'nadir': '2013-03-04T22:10:57Z',
     'sunrise': '2013-03-05T04:25:07Z',
     'sunset': '2013-03-05T15:56:46Z'}
