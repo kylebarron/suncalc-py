@@ -13,7 +13,7 @@ requirements = ['numpy']
 test_requirements = ['pytest', 'pandas']
 setup_requirements = ['setuptools >= 38.6.0']
 
-extra_reqs = {"pandas": ["pandas"]}
+extra_reqs = {'pandas': ['pandas'], 'tests': test_requirements}
 
 # yapf: disable
 setup(
