@@ -52,8 +52,12 @@ def to_milliseconds(date):
         date = date.to_numpy()
 
     # Numpy datetime64
-    if np.issubdtype(date, np.datetime64):
+    if np.issubdtype(date.dtype, np.datetime64):
         return date.astype('datetime64[ms]').astype('int')
+
+    # Last-ditch effort
+    if pd:
+        return np.array(pd.to_datetime(date).astype(int) / 10 ** 6)
 
     raise ValueError(f'Unknown date type: {type(date)}')
 
@@ -66,7 +70,17 @@ def from_julian(j):
     ms_date = (j + 0.5 - J1970) * dayMs
 
     if pd:
-        return pd.to_datetime(ms_date, unit='ms')
+        # If a single value, coerce to a pd.Timestamp
+        if np.prod(np.array(ms_date).shape) == 1:
+            return pd.to_datetime(ms_date, unit='ms')
+
+        # .astype(datetime) is much faster than pd.to_datetime but it only works
+        # on series of dates, not on a single pd.Timestamp, so I fall back to
+        # pd.to_datetime for that.
+        try:
+            return (pd.Series(ms_date) * 1e6).astype('datetime64[ns, UTC]')
+        except TypeError:
+            return pd.to_datetime(ms_date, unit='ms')
 
     # ms_date could be iterable
     try:
@@ -203,6 +217,22 @@ class SunCalc:
         Calculate sun times for a given date, latitude/longitude, and,
         optionally, the observer height (in meters) relative to the horizon
         """
+        # If inputs are vectors (or some list-like type), then coerce them to
+        # numpy arrays
+        #
+        # When inputs are pandas series, then intermediate objects will also be
+        # pandas series, and you won't be able to do 2d broadcasting.
+        try:
+            len(date)
+            len(lat)
+            len(lng)
+            array_input = True
+            date = np.array(date)
+            lat = np.array(lat)
+            lng = np.array(lng)
+        except TypeError:
+            array_input = False
+
         lw = rad * -lng
         phi = rad * lat
 
@@ -222,14 +252,24 @@ class SunCalc:
             'solar_noon': from_julian(Jnoon),
             'nadir': from_julian(Jnoon - 0.5)}
 
-        for time in self.times:
-            h0 = (time[0] + dh) * rad
+        angles = np.array([time[0] for time in self.times])
+        h0 = (angles + dh) * rad
 
-            Jset = get_set_j(h0, lw, phi, dec, n, M, L)
-            Jrise = Jnoon - (Jset - Jnoon)
+        # If array input, add an axis to allow 2d broadcasting
+        if array_input:
+            h0 = h0[:, np.newaxis]
 
-            result[time[1]] = from_julian(Jrise)
-            result[time[2]] = from_julian(Jset)
+        # Need to add an axis for 2D broadcasting
+        Jset = get_set_j(h0, lw, phi, dec, n, M, L)
+        Jrise = Jnoon - (Jset - Jnoon)
+
+        for idx, time in enumerate(self.times):
+            if array_input:
+                result[time[1]] = from_julian(Jrise[idx, :])
+                result[time[2]] = from_julian(Jset[idx, :])
+            else:
+                result[time[1]] = from_julian(Jrise[idx])
+                result[time[2]] = from_julian(Jset[idx])
 
         return result
 
