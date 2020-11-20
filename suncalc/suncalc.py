@@ -211,91 +211,87 @@ def get_set_j(h, lw, phi, dec, n, M, L):
     return solar_transit_j(a, M, L)
 
 
-class SunCalc:
-    def __init__(self, times: Iterable[Tuple[float, str, str]] = DEFAULT_TIMES):
+def get_position(date, lng, lat):
+    """Calculate sun position for a given date and latitude/longitude
+    """
+    lw = rad * -lng
+    phi = rad * lat
+    d = to_days(date)
 
-        self.times = times
+    c = sun_coords(d)
+    H = sidereal_time(d, lw) - c['ra']
 
-    def add_time(self, angle: float, rise_name: str, set_name: str):
-        """Add a custom time to the times config
-        """
-        self.times.append((angle, rise_name, set_name))
+    return {
+        'azimuth': azimuth(H, phi, c['dec']),
+        'altitude': altitude(H, phi, c['dec'])}
 
-    def get_position(self, date, lat, lng):
-        """Calculate sun position for a given date and latitude/longitude
-        """
-        lw = rad * -lng
-        phi = rad * lat
-        d = to_days(date)
 
-        c = sun_coords(d)
-        H = sidereal_time(d, lw) - c['ra']
+def get_times(
+        date,
+        lng,
+        lat,
+        height=0,
+        times: Iterable[Tuple[float, str, str]] = DEFAULT_TIMES):
+    """Calculate sun times
 
-        return {
-            'azimuth': azimuth(H, phi, c['dec']),
-            'altitude': altitude(H, phi, c['dec'])}
+    Calculate sun times for a given date, latitude/longitude, and,
+    optionally, the observer height (in meters) relative to the horizon
+    """
+    # If inputs are vectors (or some list-like type), then coerce them to
+    # numpy arrays
+    #
+    # When inputs are pandas series, then intermediate objects will also be
+    # pandas series, and you won't be able to do 2d broadcasting.
+    try:
+        len(date)
+        len(lat)
+        len(lng)
+        array_input = True
+        date = np.array(date)
+        lat = np.array(lat)
+        lng = np.array(lng)
+    except TypeError:
+        array_input = False
 
-    def get_times(self, date, lat, lng, height=0):
-        """Calculate sun times
+    lw = rad * -lng
+    phi = rad * lat
 
-        Calculate sun times for a given date, latitude/longitude, and,
-        optionally, the observer height (in meters) relative to the horizon
-        """
-        # If inputs are vectors (or some list-like type), then coerce them to
-        # numpy arrays
-        #
-        # When inputs are pandas series, then intermediate objects will also be
-        # pandas series, and you won't be able to do 2d broadcasting.
-        try:
-            len(date)
-            len(lat)
-            len(lng)
-            array_input = True
-            date = np.array(date)
-            lat = np.array(lat)
-            lng = np.array(lng)
-        except TypeError:
-            array_input = False
+    dh = observer_angle(height)
 
-        lw = rad * -lng
-        phi = rad * lat
+    d = to_days(date)
+    n = julian_cycle(d, lw)
+    ds = approx_transit(0, lw, n)
 
-        dh = observer_angle(height)
+    M = solar_mean_anomaly(ds)
+    L = ecliptic_longitude(M)
+    dec = declination(L, 0)
 
-        d = to_days(date)
-        n = julian_cycle(d, lw)
-        ds = approx_transit(0, lw, n)
+    Jnoon = solar_transit_j(ds, M, L)
 
-        M = solar_mean_anomaly(ds)
-        L = ecliptic_longitude(M)
-        dec = declination(L, 0)
+    result = {
+        'solar_noon': from_julian(Jnoon),
+        'nadir': from_julian(Jnoon - 0.5)}
 
-        Jnoon = solar_transit_j(ds, M, L)
+    angles = np.array([time[0] for time in times])
+    h0 = (angles + dh) * rad
 
-        result = {
-            'solar_noon': from_julian(Jnoon),
-            'nadir': from_julian(Jnoon - 0.5)}
+    # If array input, add an axis to allow 2d broadcasting
+    if array_input:
+        h0 = h0[:, np.newaxis]
 
-        angles = np.array([time[0] for time in self.times])
-        h0 = (angles + dh) * rad
+    # Need to add an axis for 2D broadcasting
+    Jset = get_set_j(h0, lw, phi, dec, n, M, L)
+    Jrise = Jnoon - (Jset - Jnoon)
 
-        # If array input, add an axis to allow 2d broadcasting
+    for idx, time in enumerate(times):
         if array_input:
-            h0 = h0[:, np.newaxis]
+            result[time[1]] = from_julian(Jrise[idx, :])
+            result[time[2]] = from_julian(Jset[idx, :])
+        else:
+            result[time[1]] = from_julian(Jrise[idx])
+            result[time[2]] = from_julian(Jset[idx])
 
-        # Need to add an axis for 2D broadcasting
-        Jset = get_set_j(h0, lw, phi, dec, n, M, L)
-        Jrise = Jnoon - (Jset - Jnoon)
-
-        for idx, time in enumerate(self.times):
-            if array_input:
-                result[time[1]] = from_julian(Jrise[idx, :])
-                result[time[2]] = from_julian(Jset[idx, :])
-            else:
-                result[time[1]] = from_julian(Jrise[idx])
-                result[time[2]] = from_julian(Jset[idx])
-
-        return result
+    return result
 
 
 # moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html

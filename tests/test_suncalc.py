@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from suncalc import SunCalc
+from suncalc import get_position, get_times
 
 date = datetime(2013, 3, 5, tzinfo=timezone.utc)
 lat = 50.5
@@ -36,8 +36,7 @@ heightTestTimes = {
 def test_get_position():
     """getPosition returns azimuth and altitude for the given time and location
     """
-    suncalc = SunCalc()
-    pos = suncalc.get_position(date, lat, lng)
+    pos = get_position(date, lng, lat)
     assert np.isclose(pos['azimuth'], -2.5003175907168385)
     assert np.isclose(pos['altitude'], -0.7000406838781611)
 
@@ -45,8 +44,7 @@ def test_get_position():
 def test_get_times():
     """getTimes returns sun phases for the given date and location
     """
-    suncalc = SunCalc()
-    times = suncalc.get_times(date, lat, lng)
+    times = get_times(date, lng, lat)
     for key, value in testTimes.items():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
 
@@ -54,8 +52,7 @@ def test_get_times():
 def test_get_times_height():
     """getTimes adjusts sun phases when additionally given the observer height
     """
-    suncalc = SunCalc()
-    times = suncalc.get_times(date, lat, lng, height)
+    times = get_times(date, lng, lat, height)
     for key, value in heightTestTimes.items():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
 
@@ -63,8 +60,7 @@ def test_get_times_height():
 def test_get_position_pandas_single_timestamp():
     ts_date = pd.Timestamp(date)
 
-    suncalc = SunCalc()
-    pos = suncalc.get_position(ts_date, lat, lng)
+    pos = get_position(ts_date, lng, lat)
     assert np.isclose(pos['azimuth'], -2.5003175907168385)
     assert np.isclose(pos['altitude'], -0.7000406838781611)
 
@@ -72,8 +68,7 @@ def test_get_position_pandas_single_timestamp():
 def test_get_position_pandas_datetime_series():
     df = pd.DataFrame({'date': [date] * 3, 'lat': [lat] * 3, 'lng': [lng] * 3})
 
-    suncalc = SunCalc()
-    pos = pd.DataFrame(suncalc.get_position(df['date'], df['lat'], df['lng']))
+    pos = pd.DataFrame(get_position(df['date'], df['lng'], df['lat']))
 
     assert pos.shape == (3, 2)
     assert all(x in pos.columns for x in ['azimuth', 'altitude'])
@@ -85,15 +80,13 @@ def test_get_position_pandas_datetime_series():
 
 
 def test_get_times_pandas_single():
-    suncalc = SunCalc()
-    times = suncalc.get_times(date, lat, lng)
+    times = get_times(date, lng, lat)
 
     assert isinstance(times['solar_noon'], pd.Timestamp)
 
 
 def test_get_times_datetime_single():
-    suncalc = SunCalc()
-    times = suncalc.get_times(date, lat, lng)
+    times = get_times(date, lng, lat)
 
     # This is true because pd.Timestamp is an instance of datetime.datetime
     assert isinstance(times['solar_noon'], datetime)
@@ -102,8 +95,7 @@ def test_get_times_datetime_single():
 def test_get_times_arrays():
     df = pd.DataFrame({'date': [date] * 3, 'lat': [lat] * 3, 'lng': [lng] * 3})
 
-    suncalc = SunCalc()
-    times = pd.DataFrame(suncalc.get_times(df['date'], df['lat'], df['lng']))
+    times = pd.DataFrame(get_times(df['date'], df['lng'], df['lat']))
 
     assert pd.api.types.is_datetime64_any_dtype(times['solar_noon'])
 
@@ -112,7 +104,7 @@ def test_get_times_arrays():
 
 
 # t.test('getMoonPosition returns moon position data given time and location', function (t) {
-#     var moonPos = SunCalc.getMoonPosition(date, lat, lng);
+#     var moonPos = SunCalc.getMoonPosition(date, lng, lat);
 #
 #     t.ok(near(moonPos.azimuth, -0.9783999522438226), 'azimuth');
 #     t.ok(near(moonPos.altitude, 0.014551482243892251), 'altitude');
@@ -130,7 +122,7 @@ def test_get_times_arrays():
 # });
 #
 # t.test('getMoonTimes returns moon rise and set times', function (t) {
-#     var moonTimes = SunCalc.getMoonTimes(new Date('2013-03-04UTC'), lat, lng, true);
+#     var moonTimes = SunCalc.getMoonTimes(new Date('2013-03-04UTC'), lng, lat, true);
 #
 #     t.equal(moonTimes.rise.toUTCString(), 'Mon, 04 Mar 2013 23:54:29 GMT');
 #     t.equal(moonTimes.set.toUTCString(), 'Mon, 04 Mar 2013 07:47:58 GMT');
