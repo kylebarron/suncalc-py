@@ -1,5 +1,18 @@
 # suncalc-py
 
+<p>
+  <a href="https://github.com/kylebarron/suncalc-py/actions?query=workflow%3ACI" target="_blank">
+      <img src="https://github.com/kylebarron/suncalc-py/workflows/test/badge.svg" alt="Test">
+  </a>
+  <a href="https://pypi.org/project/suncalc" target="_blank">
+      <img src="https://img.shields.io/pypi/v/suncalc?color=%2334D058&label=pypi%20package" alt="Package version">
+  </a>
+  <a href="https://github.com/kylebarron/suncalc-py/blob/master/LICENSE" target="_blank">
+      <img src="https://img.shields.io/github/license/kylebarron/suncalc-py.svg" alt="Downloads">
+  </a>
+</p>
+
+
 A fast, vectorized Python implementation of [`suncalc.js`][suncalc-js] for
 calculating sun position and sunlight phases (times for sunrise, sunset, dusk,
 etc.) for the given location and time.
