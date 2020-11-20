@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import numpy as np
+import pandas as pd
 
 from suncalc import SunCalc
 
@@ -57,6 +58,30 @@ def test_get_times_height():
     times = suncalc.get_times(date, lat, lng, height)
     for key, value in heightTestTimes.items():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
+
+
+def test_get_position_pandas_single_timestamp():
+    ts_date = pd.Timestamp(date)
+
+    suncalc = SunCalc()
+    pos = suncalc.get_position(ts_date, lat, lng)
+    assert np.isclose(pos['azimuth'], -2.5003175907168385)
+    assert np.isclose(pos['altitude'], -0.7000406838781611)
+
+
+def test_get_position_pandas_datetime_series():
+    df = pd.DataFrame({'date': [date] * 3, 'lat': [lat] * 3, 'lng': [lng] * 3})
+
+    suncalc = SunCalc()
+    pos = pd.DataFrame(suncalc.get_position(df['date'], df['lat'], df['lng']))
+
+    assert pos.shape == (3, 2)
+    assert all(x in pos.columns for x in ['azimuth', 'altitude'])
+    assert pos.dtypes['azimuth'] == np.dtype('float64')
+    assert pos.dtypes['altitude'] == np.dtype('float64')
+
+    assert np.isclose(pos['azimuth'].iloc[0], -2.5003175907168385)
+    assert np.isclose(pos['altitude'].iloc[0], -0.7000406838781611)
 
 
 # t.test('getMoonPosition returns moon position data given time and location', function (t) {
