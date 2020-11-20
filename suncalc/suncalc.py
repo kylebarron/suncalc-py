@@ -180,3 +180,88 @@ def get_times(date, lat, lng, height=0):
 
 
     return result
+
+
+
+# moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html
+# formulas
+
+def moonCoords(d):
+    """Geocentric ecliptic coordinates of the moon
+    """
+
+    # ecliptic longitude
+    L = rad * (218.316 + 13.176396 * d)
+    # mean anomaly
+    M = rad * (134.963 + 13.064993 * d)
+    # mean distance
+    F = rad * (93.272 + 13.229350 * d)
+
+    # longitude
+    l  = L + rad * 6.289 * sin(M)
+    # latitude
+    b  = rad * 5.128 * sin(F)
+    # distance to the moon in km
+    dt = 385001 - 20905 * cos(M)
+
+    return {
+        'ra': right_ascension(l, b),
+        'dec': declination(l, b),
+        'dist': dt
+    }
+
+
+def getMoonPosition(date, lat, lng):
+
+    lw  = rad * -lng
+    phi = rad * lat
+    d   = toDays(date)
+
+    c = moonCoords(d)
+    H = siderealTime(d, lw) - c['ra']
+    h = altitude(H, phi, c['dec'])
+
+    # formula 14.1 of "Astronomical Algorithms" 2nd edition by Jean Meeus
+    # (Willmann-Bell, Richmond) 1998.
+    pa = atan(sin(H), tan(phi) * cos(c['dec']) - sin(c['dec']) * cos(H))
+
+    # altitude correction for refraction
+    h = h + astro_refraction(h)
+
+    return {
+        'azimuth': azimuth(H, phi, c['dec']),
+        'altitude': h,
+        'distance': c['dist'],
+        'parallacticAngle': pa
+    }
+
+
+
+# calculations for illumination parameters of the moon, based on
+# http://idlastro.gsfc.nasa.gov/ftp/pro/astro/mphase.pro formulas and Chapter 48
+# of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell,
+# Richmond) 1998.
+
+def getMoonIllumination(date):
+
+    d = toDays(date)
+    s = sun_coords(d)
+    m = moonCoords(d)
+
+    # distance from Earth to Sun in km
+    sdist = 149598000
+
+    phi = acos(sin(s['dec']) * sin(m['dec']) + cos(s['dec']) * cos(m['dec']) * cos(s['ra'] - m['ra']))
+    inc = atan(sdist * sin(phi), m.dist - sdist * cos(phi)),
+    angle = atan(cos(s['dec']) * sin(s['ra'] - m['ra']), sin(s['dec']) * cos(m['dec']) -
+            cos(s['dec']) * sin(m['dec']) * cos(s['ra'] - m['ra']));
+
+
+    return {
+        'fraction': (1 + cos(inc)) / 2,
+        'phase': 0.5 + 0.5 * inc * np.sign(angle) / PI,
+        'angle': angle
+    }
+
+
+
