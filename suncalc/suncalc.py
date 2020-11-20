@@ -68,7 +68,12 @@ def from_julian(j):
     if pd:
         return pd.to_datetime(ms_date, unit='ms')
 
-    return datetime.utcfromtimestamp(ms_date / 1000)
+    # ms_date could be iterable
+    try:
+        return np.array([datetime.utcfromtimestamp(x / 1000) for x in ms_date])
+
+    except TypeError:
+        return datetime.utcfromtimestamp(ms_date / 1000)
 
 
 def to_days(date):
@@ -169,13 +174,9 @@ def get_set_j(h, lw, phi, dec, n, M, L):
 
 
 class SunCalc:
-    def __init__(
-            self,
-            times: Iterable[Tuple[float, str, str]] = DEFAULT_TIMES,
-            date_type=None):
+    def __init__(self, times: Iterable[Tuple[float, str, str]] = DEFAULT_TIMES):
 
         self.times = times
-        self.date_type = date_type
 
     def add_time(self, angle: float, rise_name: str, set_name: str):
         """Add a custom time to the times config

@@ -84,6 +84,33 @@ def test_get_position_pandas_datetime_series():
     assert np.isclose(pos['altitude'].iloc[0], -0.7000406838781611)
 
 
+def test_get_times_pandas_single():
+    suncalc = SunCalc()
+    times = suncalc.get_times(date, lat, lng)
+
+    assert isinstance(times['solar_noon'], pd.Timestamp)
+
+
+def test_get_times_datetime_single():
+    suncalc = SunCalc()
+    times = suncalc.get_times(date, lat, lng)
+
+    # This is true because pd.Timestamp is an instance of datetime.datetime
+    assert isinstance(times['solar_noon'], datetime)
+
+
+def test_get_times_arrays():
+    df = pd.DataFrame({'date': [date] * 3, 'lat': [lat] * 3, 'lng': [lng] * 3})
+
+    suncalc = SunCalc()
+    times = pd.DataFrame(suncalc.get_times(df['date'], df['lat'], df['lng']))
+
+    assert pd.api.types.is_datetime64_any_dtype(times['solar_noon'])
+
+    assert times['solar_noon'].iloc[0].strftime(
+        "%Y-%m-%dT%H:%M:%SZ") == testTimes['solar_noon']
+
+
 # t.test('getMoonPosition returns moon position data given time and location', function (t) {
 #     var moonPos = SunCalc.getMoonPosition(date, lat, lng);
 #
