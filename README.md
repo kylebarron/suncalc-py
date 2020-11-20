@@ -201,7 +201,10 @@ really slow!!
 
 1: [`pyorbital`](https://github.com/pytroll/pyorbital) looks great but is
 GPL3-licensed; [`pysolar`](https://github.com/pingswept/pysolar) is also
-GPL3-licensed. [`pyEphem`](https://rhodesmill.org/pyephem/) is LGPL3-licensed. I
-recently discovered [`sunpy`](https://github.com/sunpy/sunpy) and
+GPL3-licensed; [`pyEphem`](https://rhodesmill.org/pyephem/) is LGPL3-licensed.
+[`suncalcPy`](https://github.com/Broham/suncalcPy) is another port of
+`suncalc.js`, and is MIT-licensed, but doesn't use Numpy and thus isn't
+vectorized. I recently discovered [`sunpy`](https://github.com/sunpy/sunpy) and
 [`astropy`](https://github.com/astropy/astropy), both of which probably would've
-worked but I didn't see them at first...
+worked but I didn't see them at first and they look quite complex for this
+simple task...
