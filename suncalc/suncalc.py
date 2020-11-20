@@ -47,7 +47,7 @@ def siderealTime(d, lw):
 def astro_refraction(h):
     # the following formula works for positive altitudes only.
     # if h = -0.08901179 a div/0 would occur.
-    h = max(h, 0)
+    h = np.maximum(h, 0)
 
     # formula 16.4 of "Astronomical Algorithms" 2nd edition by Jean Meeus
     # (Willmann-Bell, Richmond) 1998. 1.02 / tan(h + 10.26 / (h + 5.10)) h in
@@ -95,8 +95,8 @@ def get_position(date, lat, lng):
     H  = siderealTime(d, lw) - c['ra']
 
     return {
-        'azimuth': azimuth(H, phi, c.dec),
-        'altitude': altitude(H, phi, c.dec)
+        'azimuth': azimuth(H, phi, c['dec']),
+        'altitude': altitude(H, phi, c['dec'])
     }
 
 # sun times configuration (angle, morning name, evening name)
@@ -119,7 +119,7 @@ def add_time(angle, rise_name, set_name):
 J0 = 0.0009
 
 def julian_cycle(d, lw):
-    return Math.round(d - J0 - lw / (2 * PI))
+    return np.round(d - J0 - lw / (2 * PI))
 
 def approx_transit(Ht, lw, n):
     return J0 + (Ht + lw) / (2 * PI) + n
@@ -131,7 +131,7 @@ def hour_angle(h, phi, d):
     return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d)))
 
 def observer_angle(height):
-    return -2.076 * Math.sqrt(height) / 60
+    return -2.076 * np.sqrt(height) / 60
 
 
 def get_set_j(h, lw, phi, dec, n, M, L):
