@@ -7,14 +7,7 @@ etc.) for the given location and time.
 [suncalc-js]: https://github.com/mourner/suncalc
 
 While other similar libraries exist, I didn't originally encounter any that met
-my requirements of being both openly-licensed and vectorized [^1].
-
-[^1]: [`pyorbital`](https://github.com/pytroll/pyorbital) looks great but is
-GPL3-licensed; [`pysolar`](https://github.com/pingswept/pysolar) is also
-GPL3-licensed. [`pyEphem`](https://rhodesmill.org/pyephem/) is LGPL3-licensed. I
-recently discovered [`sunpy`](https://github.com/sunpy/sunpy) and
-[`astropy`](https://github.com/astropy/astropy), both of which probably would've
-worked but I didn't see them at first...
+my requirements of being both openly-licensed and vectorized <sup>1</sup>
 
 ## Install
 
@@ -175,3 +168,12 @@ faster** than the second!
 # CPU times: user 2min 33s, sys: 288 ms, total: 2min 34s
 # Wall time: 2min 34s
 ```
+
+---
+
+1: [`pyorbital`](https://github.com/pytroll/pyorbital) looks great but is
+GPL3-licensed; [`pysolar`](https://github.com/pingswept/pysolar) is also
+GPL3-licensed. [`pyEphem`](https://rhodesmill.org/pyephem/) is LGPL3-licensed. I
+recently discovered [`sunpy`](https://github.com/sunpy/sunpy) and
+[`astropy`](https://github.com/astropy/astropy), both of which probably would've
+worked but I didn't see them at first...
