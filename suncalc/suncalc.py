@@ -115,3 +115,68 @@ def add_time(angle, rise_name, set_name):
     times.append((angle, rise_name, set_name))
 
 
+# calculations for sun times
+J0 = 0.0009
+
+def julian_cycle(d, lw):
+    return Math.round(d - J0 - lw / (2 * PI))
+
+def approx_transit(Ht, lw, n):
+    return J0 + (Ht + lw) / (2 * PI) + n
+
+def solar_transit_j(ds, M, L):
+    return J2000 + ds + 0.0053 * sin(M) - 0.0069 * sin(2 * L)
+
+def hour_angle(h, phi, d):
+    return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d)))
+
+def observer_angle(height):
+    return -2.076 * Math.sqrt(height) / 60
+
+
+def get_set_j(h, lw, phi, dec, n, M, L):
+    """Get set time for the given sun altitude
+    """
+    w = hour_angle(h, phi, dec)
+    a = approx_transit(w, lw, n)
+    return solar_transit_j(a, M, L)
+
+
+def get_times(date, lat, lng, height=0):
+    """Calculate sun times
+
+    Calculate sun times for a given date, latitude/longitude, and, optionally,
+    the observer height (in meters) relative to the horizon
+    """
+    lw = rad * -lng
+    phi = rad * lat
+
+    dh = observer_angle(height)
+
+    d = toDays(date)
+    n = julian_cycle(d, lw)
+    ds = approx_transit(0, lw, n)
+
+    M = solar_mean_anomaly(ds)
+    L = ecliptic_longitude(M)
+    dec = declination(L, 0)
+
+    Jnoon = solar_transit_j(ds, M, L)
+
+    result = {
+        'solarNoon': fromJulian(Jnoon),
+        'nadir': fromJulian(Jnoon - 0.5)
+    }
+
+    for i in range(len(times)):
+        time = times[i]
+        h0 = (time[0] + dh) * rad
+
+        Jset = get_set_j(h0, lw, phi, dec, n, M, L)
+        Jrise = Jnoon - (Jset - Jnoon)
+
+        result[time[1]] = fromJulian(Jrise)
+        result[time[2]] = fromJulian(Jset)
+
+
+    return result
