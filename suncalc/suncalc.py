@@ -55,9 +55,9 @@ def from_julian(j):
     ms_date = (j + 0.5 - J1970) * dayMs
 
     if pd:
-        pd.to_datetime(ms_date, unit='ms')
+        return pd.to_datetime(ms_date, unit='ms')
 
-    return np.datetime64(ms_date, 'ms')
+    return datetime.utcfromtimestamp(ms_date / 1000)
 
 
 def to_days(date):
