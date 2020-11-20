@@ -2,6 +2,7 @@
 TODO: include suncalc.js' BSD-2-clause license
 """
 from datetime import datetime
+from typing import Iterable, Tuple
 
 import numpy as np
 
@@ -19,6 +20,16 @@ asin = np.arcsin
 atan = np.arctan2
 acos = np.arccos
 rad = PI / 180
+
+# sun times configuration (angle, morning name, evening name)
+DEFAULT_TIMES = [
+    (-0.833, 'sunrise',         'sunset'      ),
+    (  -0.3, 'sunrise_end',     'sunset_start' ),
+    (    -6, 'dawn',            'dusk'        ),
+    (   -12, 'nautical_dawn',   'nautical_dusk'),
+    (   -18, 'night_end',       'night'       ),
+    (     6, 'golden_hour_end', 'golden_hour')
+]
 
 # date/time constants and conversions
 dayMs = 1000 * 60 * 60 * 24
@@ -121,41 +132,6 @@ def sun_coords(d):
     }
 
 
-SunCalc = {}
-
-
-def get_position(date, lat, lng):
-    """Calculate sun position for a given date and latitude/longitude
-    """
-
-    lw  = rad * -lng
-    phi = rad * lat
-    d   = to_days(date)
-
-    c  = sun_coords(d)
-    H  = sidereal_time(d, lw) - c['ra']
-
-    return {
-        'azimuth': azimuth(H, phi, c['dec']),
-        'altitude': altitude(H, phi, c['dec'])
-    }
-
-# sun times configuration (angle, morning name, evening name)
-times = [
-    (-0.833, 'sunrise',       'sunset'      ),
-    (  -0.3, 'sunriseEnd',    'sunsetStart' ),
-    (    -6, 'dawn',          'dusk'        ),
-    (   -12, 'nauticalDawn',  'nauticalDusk'),
-    (   -18, 'nightEnd',      'night'       ),
-    (     6, 'goldenHourEnd', 'goldenHour'  )
-]
-
-def add_time(angle, rise_name, set_name):
-    """Add a custom time to the times config
-    """
-    times.append((angle, rise_name, set_name))
-
-
 # calculations for sun times
 J0 = 0.0009
 
@@ -183,44 +159,70 @@ def get_set_j(h, lw, phi, dec, n, M, L):
     return solar_transit_j(a, M, L)
 
 
-def get_times(date, lat, lng, height=0):
-    """Calculate sun times
+class SunCalc:
+    def __init__(self,
+        times: Iterable[Tuple[float, str, str]] = DEFAULT_TIMES,
+        date_type=None):
 
-    Calculate sun times for a given date, latitude/longitude, and, optionally,
-    the observer height (in meters) relative to the horizon
-    """
-    lw = rad * -lng
-    phi = rad * lat
+        self.times = times
+        self.date_type = date_type
 
-    dh = observer_angle(height)
+    def add_time(self, angle: float, rise_name: str, set_name: str):
+        """Add a custom time to the times config
+        """
+        self.times.append((angle, rise_name, set_name))
 
-    d = to_days(date)
-    n = julian_cycle(d, lw)
-    ds = approx_transit(0, lw, n)
+    def get_position(self, date, lat, lng):
+        """Calculate sun position for a given date and latitude/longitude
+        """
+        lw  = rad * -lng
+        phi = rad * lat
+        d   = to_days(date)
 
-    M = solar_mean_anomaly(ds)
-    L = ecliptic_longitude(M)
-    dec = declination(L, 0)
+        c  = sun_coords(d)
+        H  = sidereal_time(d, lw) - c['ra']
 
-    Jnoon = solar_transit_j(ds, M, L)
+        return {
+            'azimuth': azimuth(H, phi, c['dec']),
+            'altitude': altitude(H, phi, c['dec'])
+        }
 
-    result = {
-        'solarNoon': from_julian(Jnoon),
-        'nadir': from_julian(Jnoon - 0.5)
-    }
+    def get_times(self, date, lat, lng, height=0):
+        """Calculate sun times
 
-    for i in range(len(times)):
-        time = times[i]
-        h0 = (time[0] + dh) * rad
+        Calculate sun times for a given date, latitude/longitude, and,
+        optionally, the observer height (in meters) relative to the horizon
+        """
+        lw = rad * -lng
+        phi = rad * lat
 
-        Jset = get_set_j(h0, lw, phi, dec, n, M, L)
-        Jrise = Jnoon - (Jset - Jnoon)
+        dh = observer_angle(height)
 
-        result[time[1]] = from_julian(Jrise)
-        result[time[2]] = from_julian(Jset)
+        d = to_days(date)
+        n = julian_cycle(d, lw)
+        ds = approx_transit(0, lw, n)
 
+        M = solar_mean_anomaly(ds)
+        L = ecliptic_longitude(M)
+        dec = declination(L, 0)
 
-    return result
+        Jnoon = solar_transit_j(ds, M, L)
+
+        result = {
+            'solarNoon': from_julian(Jnoon),
+            'nadir': from_julian(Jnoon - 0.5)
+        }
+
+        for time in self.times:
+            h0 = (time[0] + dh) * rad
+
+            Jset = get_set_j(h0, lw, phi, dec, n, M, L)
+            Jrise = Jnoon - (Jset - Jnoon)
+
+            result[time[1]] = from_julian(Jrise)
+            result[time[2]] = from_julian(Jset)
+
+        return result
 
 
 

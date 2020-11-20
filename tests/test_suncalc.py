@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from suncalc import get_position, get_times
+from suncalc import SunCalc
 
 date = datetime(2013, 3, 5, tzinfo=timezone.utc)
 lat = 50.5
@@ -37,7 +37,8 @@ heightTestTimes = {
 def test_get_position():
     """getPosition returns azimuth and altitude for the given time and location
     """
-    pos = get_position(date, lat, lng)
+    suncalc = SunCalc()
+    pos = suncalc.get_position(date, lat, lng)
     assert np.isclose(pos['azimuth'], -2.5003175907168385)
     assert np.isclose(pos['altitude'], -0.7000406838781611)
 
@@ -45,7 +46,8 @@ def test_get_position():
 def test_get_times():
     """getTimes returns sun phases for the given date and location
     """
-    times = get_times(date, lat, lng)
+    suncalc = SunCalc()
+    times = suncalc.get_times(date, lat, lng)
     for key, value in testTimes.items():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
 
@@ -53,7 +55,8 @@ def test_get_times():
 def test_get_times_height():
     """getTimes adjusts sun phases when additionally given the observer height
     """
-    times = get_times(date, lat, lng, height)
+    suncalc = SunCalc()
+    times = suncalc.get_times(date, lat, lng, height)
     for key, value in heightTestTimes.items():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
 
