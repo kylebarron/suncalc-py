@@ -23,15 +23,13 @@ testTimes = {
     'nightEnd': '2013-03-05T02:46:17Z',
     'night': '2013-03-05T17:35:36Z',
     'goldenHourEnd': '2013-03-05T05:19:01Z',
-    'goldenHour': '2013-03-05T15:02:52Z'
-}
+    'goldenHour': '2013-03-05T15:02:52Z'}
 
 heightTestTimes = {
     'solarNoon': '2013-03-05T10:10:57Z',
     'nadir': '2013-03-04T22:10:57Z',
     'sunrise': '2013-03-05T04:25:07Z',
-    'sunset': '2013-03-05T15:56:46Z'
-}
+    'sunset': '2013-03-05T15:56:46Z'}
 
 
 def test_get_position():
