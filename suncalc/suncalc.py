@@ -1,7 +1,14 @@
 """
 TODO: include suncalc.js' BSD-2-clause license
 """
+from datetime import datetime
+
 import numpy as np
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 # shortcuts for easier to read formulas
 PI = np.pi
@@ -18,9 +25,43 @@ dayMs = 1000 * 60 * 60 * 24
 J1970 = 2440588
 J2000 = 2451545
 
-# function toJulian(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
-# function fromJulian(j)  { return new Date((j + 0.5 - J1970) * dayMs); }
-# function toDays(date)   { return toJulian(date) - J2000; }
+
+def to_milliseconds(date):
+    # datetime.datetime
+    if isinstance(date, datetime):
+        return date.timestamp() * 1000
+
+    # Pandas series of Pandas datetime objects
+    if pd and pd.api.types.is_datetime64_any_dtype(date):
+        # A datetime-like series coerce to int is (always?) in nanoseconds
+        return date.astype(int) / 10**6
+
+    # Single pandas Timestamp
+    if pd and isinstance(date, pd.Timestamp):
+        date = date.to_numpy()
+
+    # Numpy datetime64
+    if np.issubdtype(date, np.datetime64):
+        return date.astype('datetime64[ms]').astype('int')
+
+    raise ValueError(f'Unknown date type: {type(date)}')
+
+
+def to_julian(date):
+    return to_milliseconds(date) / dayMs - 0.5 + J1970
+
+
+def from_julian(j):
+    ms_date = (j + 0.5 - J1970) * dayMs
+
+    if pd:
+        pd.to_datetime(ms_date, unit='ms')
+
+    return np.datetime64(ms_date, 'ms')
+
+
+def to_days(date):
+    return to_julian(date) - J2000
 
 # general calculations for position
 
@@ -41,7 +82,7 @@ def azimuth(H, phi, dec):
 def altitude(H, phi, dec):
     return asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(H))
 
-def siderealTime(d, lw):
+def sidereal_time(d, lw):
     return rad * (280.16 + 360.9856235 * d) - lw
 
 def astro_refraction(h):
@@ -89,10 +130,10 @@ def get_position(date, lat, lng):
 
     lw  = rad * -lng
     phi = rad * lat
-    d   = toDays(date)
+    d   = to_days(date)
 
     c  = sun_coords(d)
-    H  = siderealTime(d, lw) - c['ra']
+    H  = sidereal_time(d, lw) - c['ra']
 
     return {
         'azimuth': azimuth(H, phi, c['dec']),
@@ -153,7 +194,7 @@ def get_times(date, lat, lng, height=0):
 
     dh = observer_angle(height)
 
-    d = toDays(date)
+    d = to_days(date)
     n = julian_cycle(d, lw)
     ds = approx_transit(0, lw, n)
 
@@ -164,8 +205,8 @@ def get_times(date, lat, lng, height=0):
     Jnoon = solar_transit_j(ds, M, L)
 
     result = {
-        'solarNoon': fromJulian(Jnoon),
-        'nadir': fromJulian(Jnoon - 0.5)
+        'solarNoon': from_julian(Jnoon),
+        'nadir': from_julian(Jnoon - 0.5)
     }
 
     for i in range(len(times)):
@@ -175,8 +216,8 @@ def get_times(date, lat, lng, height=0):
         Jset = get_set_j(h0, lw, phi, dec, n, M, L)
         Jrise = Jnoon - (Jset - Jnoon)
 
-        result[time[1]] = fromJulian(Jrise)
-        result[time[2]] = fromJulian(Jset)
+        result[time[1]] = from_julian(Jrise)
+        result[time[2]] = from_julian(Jset)
 
 
     return result
@@ -186,7 +227,7 @@ def get_times(date, lat, lng, height=0):
 # moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html
 # formulas
 
-def moonCoords(d):
+def moon_coords(d):
     """Geocentric ecliptic coordinates of the moon
     """
 
@@ -215,10 +256,10 @@ def getMoonPosition(date, lat, lng):
 
     lw  = rad * -lng
     phi = rad * lat
-    d   = toDays(date)
+    d   = to_days(date)
 
-    c = moonCoords(d)
-    H = siderealTime(d, lw) - c['ra']
+    c = moon_coords(d)
+    H = sidereal_time(d, lw) - c['ra']
     h = altitude(H, phi, c['dec'])
 
     # formula 14.1 of "Astronomical Algorithms" 2nd edition by Jean Meeus
@@ -244,15 +285,15 @@ def getMoonPosition(date, lat, lng):
 
 def getMoonIllumination(date):
 
-    d = toDays(date)
+    d = to_days(date)
     s = sun_coords(d)
-    m = moonCoords(d)
+    m = moon_coords(d)
 
     # distance from Earth to Sun in km
     sdist = 149598000
 
     phi = acos(sin(s['dec']) * sin(m['dec']) + cos(s['dec']) * cos(m['dec']) * cos(s['ra'] - m['ra']))
-    inc = atan(sdist * sin(phi), m.dist - sdist * cos(phi)),
+    inc = atan(sdist * sin(phi), m['dist'] - sdist * cos(phi)),
     angle = atan(cos(s['dec']) * sin(s['ra'] - m['ra']), sin(s['dec']) * cos(m['dec']) -
             cos(s['dec']) * sin(m['dec']) * cos(s['ra'] - m['ra']));
 
