@@ -96,7 +96,7 @@ pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))['solar_noon']
 If you want to join this data back to your `DataFrame`, you can use `pd.concat`:
 
 ```py
-times = pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))['solar_noon']
+times = pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))
 pd.concat([df, times], axis=1)
 ```
 
@@ -104,15 +104,20 @@ pd.concat([df, times], axis=1)
 
 #### `get_position`
 
-Calculate sun position for a given date and latitude/longitude
+Calculate sun position (azimuth and altitude) for a given date and
+latitude/longitude
 
-- `date` (`datetime` or a pandas series of datetimes): date and time to find sun position of
+- `date` (`datetime` or a pandas series of datetimes): date and time to find sun position of. **Datetime must be in UTC**.
 - `lng` (`float` or numpy array of `float`): longitude to find sun position of
 - `lat` (`float` or numpy array of `float`): latitude to find sun position of
 
+Returns a `dict` with two keys: `azimuth` and `altitude`. If the input values
+were singletons, the `dict`'s values will be floats. Otherwise they'll be numpy
+arrays of floats.
+
 #### `get_times`
 
-- `date` (`datetime` or a pandas series of datetimes): date and time to find sunlight phases of
+- `date` (`datetime` or a pandas series of datetimes): date and time to find sunlight phases of. **Datetime must be in UTC**.
 - `lng` (`float` or numpy array of `float`): longitude to find sunlight phases of
 - `lat` (`float` or numpy array of `float`): latitude to find sunlight phases of
 - `height` (`float` or numpy array of `float`, default `0`): observer height in meters
@@ -129,6 +134,12 @@ Calculate sun position for a given date and latitude/longitude
         (6, 'golden_hour_end', 'golden_hour')
     ]
     ```
+
+Returns a `dict` where the keys are `solar_noon`, `nadir`, plus any keys passed
+in the `times` argument. If the input values were singletons, the `dict`'s
+values will be of type `datetime.datetime` (or `pd.Timestamp` if you have pandas
+installed, which is a subclass of and therefore compatible with
+`datetime.datetime`). Otherwise they'll be pandas `DateTime` series.
 
 ## Benchmark
 
@@ -171,9 +182,9 @@ loop. The first is more than **100x faster** than the second.
 
 Likewise, compute `SunCalc.get_times` the same two ways: first using the
 vectorized implementation and the second using `df.apply`. The first is **2800x
-faster** than the second! Much of the difference here is that under the hood the
+faster** than the second! Some of the difference here is that under the hood the
 non-vectorized approach uses `pd.to_datetime` while the vectorized
-implementation uses `np.astype('datetime64[ns, UTC]') `. `pd.to_datetime` is
+implementation uses `np.astype('datetime64[ns, UTC]')`. `pd.to_datetime` is
 really slow!!
 
 ```py
