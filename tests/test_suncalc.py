@@ -103,6 +103,20 @@ def test_get_times_arrays():
         "%Y-%m-%dT%H:%M:%SZ") == testTimes['solar_noon']
 
 
+def test_get_times_for_high_latitudes():
+    """getTimes may fail (maybe only on Windows?) for high latitudes in the summer
+
+    See https://github.com/kylebarron/suncalc-py/issues/4
+    """
+    date = datetime(2020, 5, 26, 0, 0, 0)
+    lng = -114.0719
+    lat = 51.0447
+
+    # Make sure this doesn't raise an exception (though it will emit a warning
+    # due to a division error)
+    times = get_times(date, lng, lat)
+
+
 # t.test('getMoonPosition returns moon position data given time and location', function (t) {
 #     var moonPos = SunCalc.getMoonPosition(date, lng, lat);
 #

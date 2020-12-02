@@ -108,10 +108,13 @@ def from_julian(j):
 
     # ms_date could be iterable
     try:
-        return np.array([datetime.utcfromtimestamp(x / 1000) for x in ms_date])
+        return np.array([
+            datetime.utcfromtimestamp(x / 1000)
+            if not np.isnan(x) else np.datetime64('NaT') for x in ms_date])
 
     except TypeError:
-        return datetime.utcfromtimestamp(ms_date / 1000)
+        return datetime.utcfromtimestamp(
+            ms_date / 1000) if not np.isnan(ms_date) else np.datetime64('NaT')
 
 
 def to_days(date):
