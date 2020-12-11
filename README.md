@@ -20,7 +20,7 @@ etc.) for the given location and time.
 [suncalc-js]: https://github.com/mourner/suncalc
 
 While other similar libraries exist, I didn't originally encounter any that met
-my requirements of being both openly-licensed and vectorized <sup>1</sup>
+my requirements of being openly-licensed vectorized, and simple to use <sup>1</sup>.
 
 ## Install
 
