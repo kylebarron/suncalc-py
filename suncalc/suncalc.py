@@ -69,7 +69,7 @@ def to_milliseconds(date):
     # Pandas series of Pandas datetime objects
     if pd and pd.api.types.is_datetime64_any_dtype(date):
         # A datetime-like series coerce to int is (always?) in nanoseconds
-        return date.astype(int) / 10 ** 6
+        return date.astype('int64') / 10 ** 6
 
     # Single pandas Timestamp
     if pd and isinstance(date, pd.Timestamp):
@@ -77,11 +77,11 @@ def to_milliseconds(date):
 
     # Numpy datetime64
     if np.issubdtype(date.dtype, np.datetime64):
-        return date.astype('datetime64[ms]').astype('int')
+        return date.astype('datetime64[ms]').astype('int64')
 
     # Last-ditch effort
     if pd:
-        return np.array(pd.to_datetime(date).astype(int) / 10 ** 6)
+        return np.array(pd.to_datetime(date).astype('int64') / 10 ** 6)
 
     raise ValueError(f'Unknown date type: {type(date)}')
 
