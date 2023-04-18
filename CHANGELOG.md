@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.3] - 2023-04-18
+
+- Ensure pandas 2.0 compatibility (fix integer casting of datetimes)
+
 ## [0.1.2] - 2020-12-02
 
 - Try to catch NaN before passing to `datetime.utcfromtimestamp`
