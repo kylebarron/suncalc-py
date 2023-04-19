@@ -30,6 +30,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     description="A fast, vectorized Python port of suncalc.js",
     install_requires=requirements,
@@ -44,6 +46,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/kylebarron/suncalc-py',
-    version='0.1.2',
+    version='0.1.3',
     zip_safe=False,
 )
