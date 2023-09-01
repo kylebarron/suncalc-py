@@ -42,7 +42,7 @@ from datetime import datetime
 ```
 
 There are currently two methods: `get_position`, to get the sun azimuth and
-altitude for a given date and position, and `get_times`, to get sunlight phases
+altitude (in radians) for a given date and position, and `get_times`, to get sunlight phases
 for a given date and position.
 
 ```py
