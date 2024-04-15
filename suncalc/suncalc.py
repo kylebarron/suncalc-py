@@ -364,7 +364,7 @@ def getMoonIllumination(date):
     phi = acos(
         sin(s['dec']) * sin(m['dec']) +
         cos(s['dec']) * cos(m['dec']) * cos(s['ra'] - m['ra']))
-    inc = atan(sdist * sin(phi), m['dist'] - sdist * cos(phi)),
+    inc = atan(sdist * sin(phi), m['dist'] - sdist * cos(phi))
     angle = atan(
         cos(s['dec']) * sin(s['ra'] - m['ra']),
         sin(s['dec']) * cos(m['dec']) -
