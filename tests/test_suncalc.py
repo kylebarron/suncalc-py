@@ -79,6 +79,30 @@ def test_get_position_pandas_datetime_series():
     assert np.isclose(pos['altitude'].iloc[0], -0.7000406838781611)
 
 
+def test_get_position_datetime64_any_resolution():
+    """DatetimeIndex, Series and numpy arrays agree with the scalar path at
+    every datetime64 resolution, tz-aware or naive (UTC)."""
+    expected = get_position(date, lng, lat)
+    aware = pd.DatetimeIndex([date] * 3)
+    for unit in ['s', 'ms', 'us', 'ns']:
+        index = aware.as_unit(unit)
+        for dates in [
+                index,
+                index.tz_convert(None),
+                pd.Series(index),
+                pd.Series(index.tz_convert(None)),
+                index.tz_convert(None).to_numpy(),
+        ]:
+            pos = get_position(dates, lng, lat)
+            assert np.allclose(pos['azimuth'], expected['azimuth'])
+            assert np.allclose(pos['altitude'], expected['altitude'])
+
+    # A Series keeps its own index
+    series = pd.Series(aware.as_unit('us'), index=[10, 11, 12])
+    pos = get_position(series, lng, lat)
+    assert list(pos['altitude'].index) == [10, 11, 12]
+
+
 def test_get_times_pandas_single():
     times = get_times(date, lng, lat)
 

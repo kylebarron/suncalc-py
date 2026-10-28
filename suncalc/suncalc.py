@@ -66,9 +66,13 @@ def to_milliseconds(date):
     if isinstance(date, datetime):
         return date.timestamp() * 1000
 
-    # Pandas series of Pandas datetime objects
-    if pd and pd.api.types.is_datetime64_any_dtype(date):
+    # Pandas Series or DatetimeIndex of any resolution (pandas 3 infers
+    # microseconds by default); a numpy datetime64 array goes to the numpy
+    # branch below
+    if pd and isinstance(date, pd.Series) and pd.api.types.is_datetime64_any_dtype(date):
         return date.dt.as_unit('ns').astype('int64') / 10 ** 6
+    if pd and isinstance(date, pd.DatetimeIndex):
+        return date.as_unit('ns').astype('int64') / 10 ** 6
 
     # Single pandas Timestamp
     if pd and isinstance(date, pd.Timestamp):
