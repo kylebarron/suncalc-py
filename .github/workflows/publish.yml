@@ -1,0 +1,48 @@
+name: Publish
+
+# Build on every pull request, and publish to PyPI on new tags starting with `v`
+on:
+  pull_request:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build sdist and wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "latest"
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  upload_pypi:
+    name: Upload release to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    environment:
+      # Note: this environment must be configured in the repo settings
+      name: pypi-release
+      url: https://pypi.org/p/suncalc
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
