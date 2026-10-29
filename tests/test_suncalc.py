@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib.metadata import version
 
 import numpy as np
@@ -9,7 +9,7 @@ import suncalc
 from suncalc import get_position, get_times
 from suncalc.suncalc import DEFAULT_TIMES
 
-date = datetime(2013, 3, 5, tzinfo=timezone.utc)
+date = datetime(2013, 3, 5, tzinfo=UTC)
 lat = 50.5
 lng = 30.5
 height = 2000
@@ -60,7 +60,7 @@ def local_timezone_not_utc(monkeypatch):
 def test_get_position_naive_datetime_is_utc():
     naive = datetime(2013, 3, 5, 12)  # noqa: DTZ001
     pos = get_position(naive, lng, lat)
-    expected = get_position(naive.replace(tzinfo=timezone.utc), lng, lat)
+    expected = get_position(naive.replace(tzinfo=UTC), lng, lat)
     assert pos == expected
 
 
@@ -69,7 +69,7 @@ def test_get_times_naive_datetime_is_utc():
     """00:30 UTC and 00:30 in Berlin are on different sides of the solar day"""
     naive = datetime(2013, 3, 5, 0, 30)  # noqa: DTZ001
     times = get_times(naive, 0, 0)
-    expected = get_times(naive.replace(tzinfo=timezone.utc), 0, 0)
+    expected = get_times(naive.replace(tzinfo=UTC), 0, 0)
     assert times == expected
 
 
@@ -114,7 +114,7 @@ def test_get_position_datetime64_units(unit):
 
     pos = get_position(dates, lng, lat)
 
-    expected = get_position(datetime(2013, 3, 1, tzinfo=timezone.utc), lng, lat)
+    expected = get_position(datetime(2013, 3, 1, tzinfo=UTC), lng, lat)
     np.testing.assert_allclose(pos["altitude"], expected["altitude"])
 
 
@@ -166,7 +166,7 @@ def test_get_times_custom_times():
 
 def test_get_times_that_dont_occur():
     """Times the sun doesn't reach are NaT, like night at 51.5N in late May"""
-    times = get_times(datetime(2023, 5, 24, tzinfo=timezone.utc), 0, 51.5)
+    times = get_times(datetime(2023, 5, 24, tzinfo=UTC), 0, 51.5)
     assert is_nat(times["night_end"])
     assert is_nat(times["night"])
     assert not is_nat(times["nautical_dusk"])
@@ -177,7 +177,7 @@ def test_get_times_for_high_latitudes():
 
     See https://github.com/kylebarron/suncalc-py/issues/4
     """
-    date = datetime(2020, 5, 26, 0, 0, 0, tzinfo=timezone.utc)
+    date = datetime(2020, 5, 26, 0, 0, 0, tzinfo=UTC)
     lng = -114.0719
     lat = 51.0447
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pytest
@@ -7,7 +7,7 @@ from suncalc import get_position, get_times
 
 pd = pytest.importorskip("pandas")
 
-date = datetime(2013, 3, 5, tzinfo=timezone.utc)
+date = datetime(2013, 3, 5, tzinfo=UTC)
 lat = 50.5
 lng = 30.5
 
