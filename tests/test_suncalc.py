@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from importlib.metadata import version
 
 import numpy as np
+import pytest
 
 import suncalc
 from suncalc import get_position, get_times
@@ -55,6 +56,28 @@ def test_get_position_coordinate_arrays():
     expected = [get_position(date, lng, lat), get_position(date, 0, 0)]
     np.testing.assert_allclose(pos["azimuth"], [p["azimuth"] for p in expected])
     np.testing.assert_allclose(pos["altitude"], [p["altitude"] for p in expected])
+
+
+def test_get_position_datetime64_nat():
+    """NaT gives NaN instead of the position on 1677-09-21"""
+    dates = np.array(["NaT", "2013-03-05"], dtype="datetime64[ms]")
+
+    pos = get_position(dates, lng, lat)
+
+    assert np.isnan(pos["altitude"][0])
+    assert np.isclose(pos["altitude"][1], -0.7000406838781611)
+
+
+@pytest.mark.parametrize("unit", ["M", "D", "s", "ms", "us", "ns"])
+def test_get_position_datetime64_units(unit):
+    dates = np.array(["2013-03-01"], dtype="datetime64[D]").astype(
+        f"datetime64[{unit}]"
+    )
+
+    pos = get_position(dates, lng, lat)
+
+    expected = get_position(datetime(2013, 3, 1, tzinfo=timezone.utc), lng, lat)
+    np.testing.assert_allclose(pos["altitude"], expected["altitude"])
 
 
 def test_get_times():

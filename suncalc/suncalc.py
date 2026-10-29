@@ -74,9 +74,12 @@ J2000 = 2451545
 
 
 def to_milliseconds(date: datetime | npt.ArrayLike) -> Values:
-    """Convert dates to milliseconds since the Unix epoch."""
+    """Convert dates to milliseconds since the Unix epoch. NaT becomes NaN."""
     # datetime.datetime
     if isinstance(date, datetime):
+        # pd.NaT is a datetime too
+        if pd and date is pd.NaT:
+            return np.nan
         return date.timestamp() * 1000
 
     # Pandas Series or DatetimeIndex of any resolution (pandas 3 infers
@@ -87,9 +90,11 @@ def to_milliseconds(date: datetime | npt.ArrayLike) -> Values:
         and isinstance(date, pd.Series)
         and pd.api.types.is_datetime64_any_dtype(date)
     ):
-        return date.dt.as_unit("ns").astype("int64") / 10**6
+        ms = date.dt.as_unit("ns").astype("int64") / 10**6
+        return ms.where(date.notna())
     if pd and isinstance(date, pd.DatetimeIndex):
-        return date.as_unit("ns").astype("int64") / 10**6
+        ms = date.as_unit("ns").astype("int64") / 10**6
+        return ms.where(date.notna())
 
     # Single pandas Timestamp
     if pd and isinstance(date, pd.Timestamp):
@@ -97,11 +102,13 @@ def to_milliseconds(date: datetime | npt.ArrayLike) -> Values:
 
     # Numpy datetime64
     if np.issubdtype(date.dtype, np.datetime64):
-        return date.astype("datetime64[ms]").astype("int64")
+        return (date - np.datetime64(0, "ms")) / np.timedelta64(1, "ms")
 
     # Last-ditch effort
     if pd:
-        return np.array(pd.to_datetime(date).as_unit("ns").astype("int64") / 10**6)
+        date = pd.to_datetime(date)
+        ms = date.as_unit("ns").astype("int64") / 10**6
+        return np.array(ms.where(date.notna()))
 
     raise ValueError(f"Unknown date type: {type(date)}")
 
@@ -298,7 +305,7 @@ def get_position(
             south and `pi * 3/4` is northwest. Altitude is the angle above the
             horizon: `0` is the horizon and `pi/2` is the zenith. The values
             are floats for single inputs and arrays (or pandas Series) for
-            array inputs.
+            array inputs, and NaN where `date` is `NaT`.
 
     """
     lw = rad * -lng
@@ -340,7 +347,8 @@ def get_times(
             `pd.Timestamp`s (or `datetime`s without pandas). For array inputs,
             they're pandas Series of timezone-aware datetimes (or numpy arrays
             without pandas). Times the sun doesn't reach that day, like night
-            in summer at high latitudes, are `NaT`.
+            in summer at high latitudes, are `NaT`, as are all times where
+            `date` is `NaT`.
 
     """
     # If inputs are vectors (or some list-like type), then coerce them to

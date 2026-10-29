@@ -110,7 +110,7 @@ latitude/longitude
 
 Returns a `dict` with two keys: `azimuth` and `altitude`, in radians. If the
 input values were singletons, the `dict`'s values will be floats. Otherwise
-they'll be numpy arrays of floats.
+they'll be numpy arrays of floats. Dates that are `NaT` give `NaN`.
 
 - `azimuth` is the direction along the horizon, measured from south to west, as
   in suncalc.js: `0` is south, `pi / 2` is west, `pi` (or `-pi`) is north, and
@@ -145,7 +145,8 @@ values will be of type `datetime.datetime` (or `pd.Timestamp` if you have pandas
 installed, which is a subclass of and therefore compatible with
 `datetime.datetime`). Otherwise they'll be pandas `DateTime` series. **The
 returned times will be in UTC.** Times the sun doesn't reach that day, like night
-in summer at high latitudes, are `NaT`.
+in summer at high latitudes, are `NaT`, as are all times for dates that are
+`NaT`.
 
 ## Benchmark
 
