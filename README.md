@@ -75,18 +75,14 @@ vectorized it's much faster than a for loop in Python.
 ```py
 import pandas as pd
 
-df = pd.DataFrame({
-    'date': [date] * 10,
-    'lon': [lon] * 10,
-    'lat': [lat] * 10
-})
-pd.DataFrame(get_position(df['date'], df['lon'], df['lat']))
+df = pd.DataFrame({"date": [date] * 10, "lon": [lon] * 10, "lat": [lat] * 10})
+pd.DataFrame(get_position(df["date"], df["lon"], df["lat"]))
 # azimuth	altitude
 # 0	-1.485509	-1.048223
 # 1	-1.485509	-1.048223
 # ...
 
-pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))['solar_noon']
+pd.DataFrame(get_times(df["date"], df["lon"], df["lat"]))["solar_noon"]
 # 0   2020-11-20 08:47:08.410863872+00:00
 # 1   2020-11-20 08:47:08.410863872+00:00
 # ...
@@ -96,7 +92,7 @@ pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))['solar_noon']
 If you want to join this data back to your `DataFrame`, you can use `pd.concat`:
 
 ```py
-times = pd.DataFrame(get_times(df['date'], df['lon'], df['lat']))
+times = pd.DataFrame(get_times(df["date"], df["lon"], df["lat"]))
 pd.concat([df, times], axis=1)
 ```
 
@@ -126,12 +122,12 @@ arrays of floats.
     ```py
     # (angle, morning name, evening name)
     DEFAULT_TIMES = [
-        (-0.833, 'sunrise', 'sunset'),
-        (-0.3, 'sunrise_end', 'sunset_start'),
-        (-6, 'dawn', 'dusk'),
-        (-12, 'nautical_dawn', 'nautical_dusk'),
-        (-18, 'night_end', 'night'),
-        (6, 'golden_hour_end', 'golden_hour')
+        (-0.833, "sunrise", "sunset"),
+        (-0.3, "sunrise_end", "sunset_start"),
+        (-6, "dawn", "dusk"),
+        (-12, "nautical_dawn", "nautical_dusk"),
+        (-18, "night_end", "night"),
+        (6, "golden_hour_end", "golden_hour"),
     ]
     ```
 
@@ -153,20 +149,22 @@ First set up a `DataFrame` with random data. Here I create 100,000 rows.
 from suncalc import get_position, get_times
 import pandas as pd
 
+
 def random_dates(start, end, n=10):
     """Create an array of random dates"""
-    start_u = start.value//10**9
-    end_u = end.value//10**9
-    return pd.to_datetime(np.random.randint(start_u, end_u, n), unit='s')
+    start_u = start.value // 10**9
+    end_u = end.value // 10**9
+    return pd.to_datetime(np.random.randint(start_u, end_u, n), unit="s")
 
-start = pd.to_datetime('2015-01-01')
-end = pd.to_datetime('2018-01-01')
+
+start = pd.to_datetime("2015-01-01")
+end = pd.to_datetime("2018-01-01")
 dates = random_dates(start, end, n=100_000)
 
 lons = np.random.uniform(low=-179, high=179, size=(100_000,))
 lats = np.random.uniform(low=-89, high=89, size=(100_000,))
 
-df = pd.DataFrame({'date': dates, 'lat': lats, 'lon': lons})
+df = pd.DataFrame({"date": dates, "lat": lats, "lon": lons})
 ```
 
 Then compute `SunCalc.get_position` two ways: the first using the vectorized

@@ -11,3 +11,10 @@ uv sync
 ```
 uv run pytest
 ```
+
+## Lint
+
+```
+uvx ruff check
+uvx ruff format
+```

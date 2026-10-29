@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Astronomy",
+    "Typing :: Typed",
 ]
 keywords = ["suncalc", "sun"]
 dependencies = ["numpy"]
@@ -43,3 +44,34 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["suncalc", "suncalc.*"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812", # trailing comma; conflicts with ruff format
+    "CPY001", # copyright header
+    "D203",   # incompatible with D211
+    "D213",   # incompatible with D212
+    "EM101",  # raw string in exception
+    "EM102",  # f-string in exception
+    "FIX002", # todo statements
+    "TD002",  # todo without author name
+    "TRY003", # define exceptions in the exception class
+]
+
+[tool.ruff.lint.per-file-ignores]
+"suncalc/suncalc.py" = [
+    # Names follow the formulas in suncalc.js
+    "E741",  # ambiguous variable name
+    "N803",  # argument name should be lowercase
+    "N806",  # variable in function should be lowercase
+    "N816",  # mixedCase variable in global scope
+]
+"tests/*" = [
+    "ANN001",  # annotation in function argument
+    "ANN201",  # return type annotation
+    "PLR2004", # Magic value used in comparison
+    "S101",    # assert
+    "SLF001",  # private member access
+    "D",       # docstring
+]
