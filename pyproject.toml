@@ -78,12 +78,4 @@ ignore = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-filterwarnings = [
-    "error",
-    # numpy warns when the sun doesn't reach an angle in `times`, like night
-    # in summer at high latitudes, and get_times returns NaT for it
-    "ignore:invalid value encountered in arccos:RuntimeWarning",
-    # Without pandas, get_times returns a generic-unit NaT for such times,
-    # which numpy 2.5 deprecates
-    "ignore:The 'generic' unit for NumPy timedelta is deprecated:DeprecationWarning",
-]
+filterwarnings = ["error"]

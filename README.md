@@ -144,7 +144,8 @@ in the `times` argument. If the input values were singletons, the `dict`'s
 values will be of type `datetime.datetime` (or `pd.Timestamp` if you have pandas
 installed, which is a subclass of and therefore compatible with
 `datetime.datetime`). Otherwise they'll be pandas `DateTime` series. **The
-returned times will be in UTC.**
+returned times will be in UTC.** Times the sun doesn't reach that day, like night
+in summer at high latitudes, are `NaT`.
 
 ## Benchmark
 
