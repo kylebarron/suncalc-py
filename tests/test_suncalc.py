@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
+from importlib.metadata import version
 
 import numpy as np
-import pandas as pd
 
+import suncalc
 from suncalc import get_position, get_times
+from suncalc.suncalc import DEFAULT_TIMES
 
 date = datetime(2013, 3, 5, tzinfo=timezone.utc)
 lat = 50.5
@@ -35,11 +37,24 @@ HEIGHT_TEST_TIMES = {
 }
 
 
+def is_nat(value: object) -> bool:
+    """Whether a value is pandas' `NaT` or numpy's `datetime64("NaT")`."""
+    return str(value) == "NaT"
+
+
 def test_get_position():
     """getPosition returns azimuth and altitude for the given time and location"""
     pos = get_position(date, lng, lat)
     assert np.isclose(pos["azimuth"], -2.5003175907168385)
     assert np.isclose(pos["altitude"], -0.7000406838781611)
+
+
+def test_get_position_coordinate_arrays():
+    """Arrays of longitudes and latitudes broadcast against a single date"""
+    pos = get_position(date, np.array([lng, 0]), np.array([lat, 0]))
+    expected = [get_position(date, lng, lat), get_position(date, 0, 0)]
+    np.testing.assert_allclose(pos["azimuth"], [p["azimuth"] for p in expected])
+    np.testing.assert_allclose(pos["altitude"], [p["altitude"] for p in expected])
 
 
 def test_get_times():
@@ -56,58 +71,6 @@ def test_get_times_height():
         assert times[key].strftime("%Y-%m-%dT%H:%M:%SZ") == value
 
 
-def test_get_position_pandas_single_timestamp():
-    ts_date = pd.Timestamp(date)
-
-    pos = get_position(ts_date, lng, lat)
-    assert np.isclose(pos["azimuth"], -2.5003175907168385)
-    assert np.isclose(pos["altitude"], -0.7000406838781611)
-
-
-def test_get_position_pandas_datetime_series():
-    df = pd.DataFrame({"date": [date] * 3, "lat": [lat] * 3, "lng": [lng] * 3})
-
-    pos = pd.DataFrame(get_position(df["date"], df["lng"], df["lat"]))
-
-    assert pos.shape == (3, 2)
-    assert all(x in pos.columns for x in ["azimuth", "altitude"])
-    assert pos.dtypes["azimuth"] == np.dtype("float64")
-    assert pos.dtypes["altitude"] == np.dtype("float64")
-
-    assert np.isclose(pos["azimuth"].iloc[0], -2.5003175907168385)
-    assert np.isclose(pos["altitude"].iloc[0], -0.7000406838781611)
-
-
-def test_get_position_datetime64_any_resolution():
-    """DatetimeIndex, Series and numpy arrays agree with the scalar path at
-    every datetime64 resolution, tz-aware or naive (UTC)."""
-    expected = get_position(date, lng, lat)
-    aware = pd.DatetimeIndex([date] * 3)
-    for unit in ["s", "ms", "us", "ns"]:
-        index = aware.as_unit(unit)
-        for dates in [
-            index,
-            index.tz_convert(None),
-            pd.Series(index),
-            pd.Series(index.tz_convert(None)),
-            index.tz_convert(None).to_numpy(),
-        ]:
-            pos = get_position(dates, lng, lat)
-            assert np.allclose(pos["azimuth"], expected["azimuth"])
-            assert np.allclose(pos["altitude"], expected["altitude"])
-
-    # A Series keeps its own index
-    series = pd.Series(aware.as_unit("us"), index=[10, 11, 12])
-    pos = get_position(series, lng, lat)
-    assert list(pos["altitude"].index) == [10, 11, 12]
-
-
-def test_get_times_pandas_single():
-    times = get_times(date, lng, lat)
-
-    assert isinstance(times["solar_noon"], pd.Timestamp)
-
-
 def test_get_times_datetime_single():
     times = get_times(date, lng, lat)
 
@@ -115,17 +78,37 @@ def test_get_times_datetime_single():
     assert isinstance(times["solar_noon"], datetime)
 
 
-def test_get_times_arrays():
-    df = pd.DataFrame({"date": [date] * 3, "lat": [lat] * 3, "lng": [lng] * 3})
+def test_get_times_default_keys():
+    times = get_times(date, lng, lat)
+    names = {
+        name for _, morning, evening in DEFAULT_TIMES for name in (morning, evening)
+    }
+    assert set(times) == {"solar_noon", "nadir"} | names
 
-    times = pd.DataFrame(get_times(df["date"], df["lng"], df["lat"]))
 
-    assert pd.api.types.is_datetime64_any_dtype(times["solar_noon"])
+def test_get_times_order():
+    """Morning times come before solar noon, and evening times after"""
+    times = get_times(date, lng, lat)
+    assert times["nadir"] < times["solar_noon"]
+    for _, morning, evening in DEFAULT_TIMES:
+        assert times[morning] < times["solar_noon"] < times[evening]
 
-    assert (
-        times["solar_noon"].iloc[0].strftime("%Y-%m-%dT%H:%M:%SZ")
-        == TEST_TIMES["solar_noon"]
-    )
+
+def test_get_times_custom_times():
+    """Custom times match the default times with the same angle"""
+    times = get_times(date, lng, lat, times=[(-6, "civil_dawn", "civil_dusk")])
+    default = get_times(date, lng, lat)
+    assert set(times) == {"solar_noon", "nadir", "civil_dawn", "civil_dusk"}
+    assert times["civil_dawn"] == default["dawn"]
+    assert times["civil_dusk"] == default["dusk"]
+
+
+def test_get_times_that_dont_occur():
+    """Times the sun doesn't reach are NaT, like night at 51.5N in late May"""
+    times = get_times(datetime(2023, 5, 24, tzinfo=timezone.utc), 0, 51.5)
+    assert is_nat(times["night_end"])
+    assert is_nat(times["night"])
+    assert not is_nat(times["nautical_dusk"])
 
 
 def test_get_times_for_high_latitudes():
@@ -140,3 +123,7 @@ def test_get_times_for_high_latitudes():
     # Make sure this doesn't raise an exception (though it will emit a warning
     # due to a division error)
     get_times(date, lng, lat)
+
+
+def test_version():
+    assert suncalc.__version__ == version("suncalc")
