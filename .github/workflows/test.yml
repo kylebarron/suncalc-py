@@ -50,3 +50,34 @@ jobs:
       # `--with` layers the requested pandas over the locked one
       - name: Run tests
         run: uv run --with "pandas${{ matrix.pandas-version }}" pytest
+
+  test-oldest:
+    name: test (oldest numpy and pandas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "latest"
+          python-version: "3.9"
+
+      # pandas 2.0 is the oldest version the `pandas` extra allows
+      - name: Run tests
+        run: uv run --with "numpy<2" --with "pandas==2.0.*" pytest
+
+  test-without-pandas:
+    name: test (without pandas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "latest"
+
+      # pandas is optional. The pandas tests are skipped.
+      - name: Run tests
+        run: uv run --no-dev --with pytest pytest
