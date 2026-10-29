@@ -101,3 +101,47 @@ def test_get_times_series_that_dont_occur():
 
     assert times["night"].isna().tolist() == [True, False]
     assert times["sunrise"].notna().all()
+
+
+def test_get_position_nat():
+    """NaT gives NaN instead of the position on 1677-09-21"""
+    pos = get_position(pd.NaT, lng, lat)
+    assert np.isnan(pos["azimuth"])
+    assert np.isnan(pos["altitude"])
+
+
+def test_get_position_series_with_nat():
+    dates = pd.Series(pd.to_datetime([None, date], utc=True))
+
+    pos = get_position(dates, lng, lat)
+
+    assert pos["altitude"].isna().tolist() == [True, False]
+    assert np.isclose(pos["altitude"].iloc[1], -0.7000406838781611)
+
+
+def test_get_position_datetime_index_with_nat():
+    """The example from #19"""
+    dates = pd.to_datetime([None, None], unit="s", utc=True)
+
+    pos = get_position(dates, 0, 0)
+
+    assert np.isnan(pos["azimuth"]).all()
+    assert np.isnan(pos["altitude"]).all()
+
+
+def test_get_times_nat():
+    times = get_times(pd.NaT, lng, lat)
+    assert all(value is pd.NaT for value in times.values())
+
+
+def test_get_times_series_with_nat():
+    dates = pd.Series(pd.to_datetime([None, date], utc=True))
+
+    times = get_times(dates, [lng, lng], [lat, lat])
+
+    expected = get_times(date, lng, lat)
+    for key, value in times.items():
+        assert value.isna().tolist() == [True, False]
+        assert abs(value.iloc[1] - expected[key].tz_localize("UTC")) < pd.Timedelta(
+            1, "ms"
+        )
