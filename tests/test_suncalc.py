@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 from importlib.metadata import version
 
@@ -41,6 +42,43 @@ HEIGHT_TEST_TIMES = {
 def is_nat(value: object) -> bool:
     """Whether a value is pandas' `NaT` or numpy's `datetime64("NaT")`."""
     return str(value) == "NaT"
+
+
+@pytest.fixture
+def local_timezone_not_utc(monkeypatch):
+    """Set the local timezone to one that isn't UTC."""
+    if not hasattr(time, "tzset"):
+        pytest.skip("time.tzset is only available on Unix")
+    monkeypatch.setenv("TZ", "Europe/Berlin")
+    time.tzset()
+    yield
+    monkeypatch.undo()
+    time.tzset()
+
+
+@pytest.mark.usefixtures("local_timezone_not_utc")
+def test_get_position_naive_datetime_is_utc():
+    naive = datetime(2013, 3, 5, 12)  # noqa: DTZ001
+    pos = get_position(naive, lng, lat)
+    expected = get_position(naive.replace(tzinfo=timezone.utc), lng, lat)
+    assert pos == expected
+
+
+@pytest.mark.usefixtures("local_timezone_not_utc")
+def test_get_times_naive_datetime_is_utc():
+    """00:30 UTC and 00:30 in Berlin are on different sides of the solar day"""
+    naive = datetime(2013, 3, 5, 0, 30)  # noqa: DTZ001
+    times = get_times(naive, 0, 0)
+    expected = get_times(naive.replace(tzinfo=timezone.utc), 0, 0)
+    assert times == expected
+
+
+@pytest.mark.usefixtures("local_timezone_not_utc")
+def test_get_position_at_solar_noon():
+    """The sun is due south at solar noon, for times get_times returns (#6)"""
+    times = get_times(date, lng, lat)
+    pos = get_position(times["solar_noon"], lng, lat)
+    assert abs(pos["azimuth"]) < 0.01
 
 
 def test_get_position():

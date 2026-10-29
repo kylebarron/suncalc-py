@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** Naive datetimes are now treated as UTC, as the docs said. Before, a naive `datetime.datetime` was treated as the computer's local time, while naive pandas and numpy dates were treated as UTC. Results depended on the computer's timezone, and without pandas, passing a time from `get_times` to `get_position` was off by the UTC offset. If you pass naive local times, make them timezone-aware, for example with `datetime.now().astimezone()`. See #6, #8 and #14.
 - Dates that are `NaT` now give `NaN` positions and `NaT` times. Before, `get_position` and `get_times` raised `ValueError` for `pd.NaT`, and returned results for 1677-09-21 for `NaT` in a Series, `DatetimeIndex` or array. See #19.
 - `get_times` no longer emits `RuntimeWarning: invalid value encountered in arccos` when the sun doesn't reach an angle in `times` that day, like night in summer at high latitudes. As before, those times are `NaT`. Without pandas, they also no longer emit numpy 2.5's `DeprecationWarning` for generic-unit `NaT`. See #13.
 - Fix `DatetimeIndex` and numpy `datetime64` input, which raised `AttributeError` after the pandas 3 resolution fix, and make every datetime64 resolution give the same result

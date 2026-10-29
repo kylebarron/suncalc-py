@@ -38,7 +38,7 @@ First, import the module:
 
 ```py
 from suncalc import get_position, get_times
-from datetime import datetime
+from datetime import datetime, timezone
 ```
 
 There are currently two methods: `get_position`, to get the sun azimuth and
@@ -47,7 +47,7 @@ for a given date and position. Unlike suncalc.js, both take longitude before
 latitude.
 
 ```py
-date = datetime.now()
+date = datetime.now(timezone.utc)
 lon = 20
 lat = 45
 get_position(date, lon, lat)
@@ -104,7 +104,7 @@ pd.concat([df, times], axis=1)
 Calculate sun position (azimuth and altitude) for a given date and
 latitude/longitude
 
-- `date` (`datetime` or a pandas series of datetimes): date and time to find sun position of. **Datetime must be in UTC**.
+- `date` (`datetime` or a pandas series of datetimes): date and time to find sun position of. Timezone-aware datetimes can be in any timezone, and **naive datetimes are treated as UTC**.
 - `lng` (`float` or numpy array of `float`): longitude to find sun position of
 - `lat` (`float` or numpy array of `float`): latitude to find sun position of
 
@@ -121,7 +121,7 @@ they'll be numpy arrays of floats. Dates that are `NaT` give `NaN`.
 
 #### `get_times`
 
-- `date` (`datetime` or a pandas series of datetimes): date and time to find sunlight phases of. **Datetime must be in UTC**.
+- `date` (`datetime` or a pandas series of datetimes): date and time to find sunlight phases of. Timezone-aware datetimes can be in any timezone, and **naive datetimes are treated as UTC**.
 - `lng` (`float` or numpy array of `float`): longitude to find sunlight phases of
 - `lat` (`float` or numpy array of `float`): latitude to find sunlight phases of
 - `height` (`float` or numpy array of `float`, default `0`): observer height in meters
@@ -147,6 +147,19 @@ installed, which is a subclass of and therefore compatible with
 returned times will be in UTC.** Times the sun doesn't reach that day, like night
 in summer at high latitudes, are `NaT`, as are all times for dates that are
 `NaT`.
+
+For single inputs, the returned times are naive. To convert one to a local
+time, mark it as UTC first:
+
+```py
+from zoneinfo import ZoneInfo
+
+sunrise = get_times(date, lon, lat)["sunrise"]
+sunrise.replace(tzinfo=timezone.utc).astimezone(ZoneInfo("Europe/Warsaw"))
+```
+
+For array inputs, the returned pandas Series are already timezone-aware, so use
+`times["sunrise"].dt.tz_convert("Europe/Warsaw")`.
 
 ## Benchmark
 
