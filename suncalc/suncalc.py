@@ -80,6 +80,9 @@ def to_milliseconds(date: datetime | npt.ArrayLike) -> Values:
         # pd.NaT is a datetime too
         if pd and date is pd.NaT:
             return np.nan
+        # Naive datetimes are UTC, not local time
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=timezone.utc)
         return date.timestamp() * 1000
 
     # Pandas Series or DatetimeIndex of any resolution (pandas 3 infers
@@ -295,7 +298,7 @@ def get_position(
     Args:
         date: Date and time to find the sun position of, as a `datetime`, a
             pandas `Timestamp` or `Series` of datetimes, or a numpy
-            `datetime64` array. Datetimes must be in UTC.
+            `datetime64` array. Naive datetimes are treated as UTC.
         lng: Longitude, in degrees.
         lat: Latitude, in degrees.
 
@@ -333,7 +336,7 @@ def get_times(
     Args:
         date: Date to find sunlight phases of, as a `datetime`, a pandas
             `Timestamp` or `Series` of datetimes, or a numpy `datetime64`
-            array. Datetimes must be in UTC.
+            array. Naive datetimes are treated as UTC.
         lng: Longitude, in degrees.
         lat: Latitude, in degrees.
         height: Observer height, in meters, relative to the horizon.
@@ -344,11 +347,11 @@ def get_times(
     Returns:
         A dict with keys `solar_noon`, `nadir`, and the morning and evening
             names in `times`. The times are in UTC. For single inputs, they're
-            `pd.Timestamp`s (or `datetime`s without pandas). For array inputs,
-            they're pandas Series of timezone-aware datetimes (or numpy arrays
-            without pandas). Times the sun doesn't reach that day, like night
-            in summer at high latitudes, are `NaT`, as are all times where
-            `date` is `NaT`.
+            naive `pd.Timestamp`s (or `datetime`s without pandas). For array
+            inputs, they're pandas Series of timezone-aware datetimes (or numpy
+            arrays without pandas). Times the sun doesn't reach that day, like
+            night in summer at high latitudes, are `NaT`, as are all times
+            where `date` is `NaT`.
 
     """
     # If inputs are vectors (or some list-like type), then coerce them to
