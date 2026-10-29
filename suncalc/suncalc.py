@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Union
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from pandas import Series
 
     # Calculations work on floats, numpy arrays and pandas Series alike
-    Values = Union[float, np.ndarray, Series]
+    Values = float | np.ndarray | Series
 
 # shortcuts for easier to read formulas
 PI = np.pi
@@ -82,7 +82,7 @@ def to_milliseconds(date: datetime | npt.ArrayLike) -> Values:
             return np.nan
         # Naive datetimes are UTC, not local time
         if date.tzinfo is None:
-            date = date.replace(tzinfo=timezone.utc)
+            date = date.replace(tzinfo=UTC)
         return date.timestamp() * 1000
 
     # Pandas Series or DatetimeIndex of any resolution (pandas 3 infers
@@ -162,7 +162,7 @@ def from_julian(j: Values) -> datetime | np.datetime64 | np.ndarray | Series:
 
 def _utc_from_ms(ms: float) -> datetime:
     """Convert milliseconds since the Unix epoch to a naive datetime in UTC."""
-    return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).replace(tzinfo=None)
+    return datetime.fromtimestamp(ms / 1000, tz=UTC).replace(tzinfo=None)
 
 
 def to_days(date: datetime | npt.ArrayLike) -> Values:

@@ -27,14 +27,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         pandas-version: ["<3", ">=3"]
-        # pandas 3 supports python 3.11 and higher
+        # pandas 2 has no Python 3.15 wheels
         exclude:
-          - python-version: "3.9"
-            pandas-version: ">=3"
-          - python-version: "3.10"
-            pandas-version: ">=3"
+          - python-version: "3.15"
+            pandas-version: "<3"
 
     steps:
       - uses: actions/checkout@v7
@@ -61,7 +59,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.3.2
         with:
           version: "latest"
-          python-version: "3.9"
+          python-version: "3.11"
 
       # pandas 2.0 is the oldest version the `pandas` extra allows
       - name: Run tests

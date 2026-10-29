@@ -1,12 +1,12 @@
 """Moon functions, checked against the values in suncalc.js's test suite."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 
 from suncalc.suncalc import getMoonIllumination, getMoonPosition
 
-date = datetime(2013, 3, 5, tzinfo=timezone.utc)
+date = datetime(2013, 3, 5, tzinfo=UTC)
 lat = 50.5
 lng = 30.5
 
