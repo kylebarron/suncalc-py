@@ -137,13 +137,17 @@ def from_julian(j: Values) -> datetime | np.datetime64 | np.ndarray | Series:
     try:
         return np.array(
             [
-                _utc_from_ms(x) if not np.isnan(x) else np.datetime64("NaT")
+                _utc_from_ms(x) if not np.isnan(x) else np.datetime64("NaT", "us")
                 for x in ms_date
             ]
         )
 
     except TypeError:
-        return _utc_from_ms(ms_date) if not np.isnan(ms_date) else np.datetime64("NaT")
+        return (
+            _utc_from_ms(ms_date)
+            if not np.isnan(ms_date)
+            else np.datetime64("NaT", "us")
+        )
 
 
 def _utc_from_ms(ms: float) -> datetime:
@@ -246,8 +250,12 @@ def solar_transit_j(ds: Values, M: Values, L: Values) -> Values:
 
 
 def hour_angle(h: Values, phi: Values, d: Values) -> Values:
-    """Hour angle at which the sun reaches altitude `h`."""
-    return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d)))
+    """Hour angle at which the sun reaches altitude `h`.
+
+    NaN where the sun never reaches `h` that day.
+    """
+    with np.errstate(invalid="ignore"):
+        return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d)))
 
 
 def observer_angle(height: Values) -> Values:
@@ -331,7 +339,8 @@ def get_times(
             names in `times`. The times are in UTC. For single inputs, they're
             `pd.Timestamp`s (or `datetime`s without pandas). For array inputs,
             they're pandas Series of timezone-aware datetimes (or numpy arrays
-            without pandas).
+            without pandas). Times the sun doesn't reach that day, like night
+            in summer at high latitudes, are `NaT`.
 
     """
     # If inputs are vectors (or some list-like type), then coerce them to

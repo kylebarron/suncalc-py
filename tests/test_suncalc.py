@@ -120,8 +120,7 @@ def test_get_times_for_high_latitudes():
     lng = -114.0719
     lat = 51.0447
 
-    # Make sure this doesn't raise an exception (though it will emit a warning
-    # due to a division error)
+    # Make sure this doesn't raise an exception
     get_times(date, lng, lat)
 
 
