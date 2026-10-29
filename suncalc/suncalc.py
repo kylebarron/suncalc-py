@@ -324,7 +324,7 @@ def get_times(
         height: Observer height, in meters, relative to the horizon.
         times: Sunlight phases to compute, as tuples of `(angle, morning name,
             evening name)`, where `angle` is the sun's altitude in degrees.
-            Defaults to [`DEFAULT_TIMES`][suncalc.suncalc.DEFAULT_TIMES].
+            Defaults to `DEFAULT_TIMES`.
 
     Returns:
         A dict with keys `solar_noon`, `nadir`, and the morning and evening
@@ -419,8 +419,8 @@ def getMoonPosition(  # noqa: N802 (public name kept for backwards compatibility
 ) -> dict[str, Any]:
     """Calculate moon position for a given date and latitude/longitude.
 
-    Unlike [`get_position`][suncalc.get_position], this takes latitude before
-    longitude, as in suncalc.js.
+    Unlike `get_position`, this takes latitude before longitude, as in
+    suncalc.js.
 
     Args:
         date: Date and time to find the moon position of.
@@ -429,8 +429,8 @@ def getMoonPosition(  # noqa: N802 (public name kept for backwards compatibility
 
     Returns:
         A dict with keys `azimuth` and `altitude` (in radians, as in
-            [`get_position`][suncalc.get_position]), `distance` (to the moon,
-            in kilometers), and `parallacticAngle` (in radians).
+            `get_position`), `distance` (to the moon, in kilometers), and
+            `parallacticAngle` (in radians).
 
     """
     lw = rad * -lng
