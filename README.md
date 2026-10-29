@@ -1,14 +1,14 @@
 # suncalc-py
 
 <p>
-  <a href="https://github.com/kylebarron/suncalc-py/actions?query=workflow%3ACI" target="_blank">
-      <img src="https://github.com/kylebarron/suncalc-py/workflows/test/badge.svg" alt="Test">
+  <a href="https://github.com/kylebarron/suncalc-py/actions/workflows/test.yml" target="_blank">
+      <img src="https://github.com/kylebarron/suncalc-py/actions/workflows/test.yml/badge.svg" alt="Test">
   </a>
   <a href="https://pypi.org/project/suncalc" target="_blank">
       <img src="https://img.shields.io/pypi/v/suncalc?color=%2334D058&label=pypi%20package" alt="Package version">
   </a>
   <a href="https://github.com/kylebarron/suncalc-py/blob/master/LICENSE" target="_blank">
-      <img src="https://img.shields.io/github/license/kylebarron/suncalc-py.svg" alt="Downloads">
+      <img src="https://img.shields.io/github/license/kylebarron/suncalc-py.svg" alt="License">
   </a>
 </p>
 
@@ -43,7 +43,8 @@ from datetime import datetime
 
 There are currently two methods: `get_position`, to get the sun azimuth and
 altitude (in radians) for a given date and position, and `get_times`, to get sunlight phases
-for a given date and position.
+for a given date and position. Unlike suncalc.js, both take longitude before
+latitude.
 
 ```py
 date = datetime.now()
@@ -107,9 +108,16 @@ latitude/longitude
 - `lng` (`float` or numpy array of `float`): longitude to find sun position of
 - `lat` (`float` or numpy array of `float`): latitude to find sun position of
 
-Returns a `dict` with two keys: `azimuth` and `altitude`. If the input values
-were singletons, the `dict`'s values will be floats. Otherwise they'll be numpy
-arrays of floats.
+Returns a `dict` with two keys: `azimuth` and `altitude`, in radians. If the
+input values were singletons, the `dict`'s values will be floats. Otherwise
+they'll be numpy arrays of floats.
+
+- `azimuth` is the direction along the horizon, measured from south to west, as
+  in suncalc.js: `0` is south, `pi / 2` is west, `pi` (or `-pi`) is north, and
+  `-pi / 2` is east. For the more common azimuth measured clockwise from north,
+  use `(azimuth + np.pi) % (2 * np.pi)`.
+- `altitude` is the angle above the horizon: `0` is the horizon and `pi / 2` is
+  straight up.
 
 #### `get_times`
 
@@ -147,6 +155,7 @@ First set up a `DataFrame` with random data. Here I create 100,000 rows.
 
 ```py
 from suncalc import get_position, get_times
+import numpy as np
 import pandas as pd
 
 
