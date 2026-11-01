@@ -42,7 +42,7 @@ jobs:
       # uv installs the Python version itself, so this doesn't depend on which
       # versions the runner image provides
       - name: Install a specific version of uv
-        uses: astral-sh/setup-uv@v10.3.2
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "latest"
           python-version: ${{ matrix.python-version }}
@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install a specific version of uv
-        uses: astral-sh/setup-uv@v10.3.2
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "latest"
           python-version: "3.9"
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install a specific version of uv
-        uses: astral-sh/setup-uv@v10.3.2
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "latest"
 
